@@ -1,0 +1,12 @@
+{
+  "name": "finance-app",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cd client && vite",
+    "build": "cd client && tsc && vite build",
+    "preview": "cd client && vite preview",
+    "deploy": "cd ./server && cdk deploy --profile main",
+    "test": "jest"
+  },
+  "license": "ISC"
+}
