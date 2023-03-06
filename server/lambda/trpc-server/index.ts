@@ -1,4 +1,5 @@
 import { inferAsyncReturnType, initTRPC } from "@trpc/server";
+import { getExpenses } from "./resolvers/getExpenses";
 // import { z } from "zod";
 
 import {
@@ -13,6 +14,12 @@ const appRouter = t.router({
   hello: t.procedure.query((req) => {
     console.log("hello, REQ", req);
     return "Hello World!";
+  }),
+  getExpenses: t.procedure.query(async () => {
+    console.log("getExpenses");
+    const expenses = await getExpenses();
+    console.log("getExpenses", expenses);
+    return expenses;
   }),
   // greet: t.procedure
   //   .input(z.object({ name: z.string() }))
@@ -64,49 +71,3 @@ export const main = async (event: APIGatewayProxyEvent, context: any) => {
   };
   return result;
 };
-
-////save note to dynamodb using doc client
-////table name is in env var
-////uuid is generated in the lambda using aws
-//const AWS = require("aws-sdk");
-//import {
-//  DynamoDBClient,
-//  PutItemCommand,
-//  ScanCommand,
-//} from "@aws-sdk/client-dynamodb";
-
-//const client = new DynamoDBClient({ region: "eu-west-1" });
-
-//const saveNoteToDB = async (note: string) => {
-//  const id = AWS.util.uuid.v4();
-//  const params = {
-//    TableName: process.env.TABLE_NAME,
-//    Item: {
-//      PK: { S: `NOTE#${id}` },
-//      SK: { S: `NOTE#${id}` },
-//      note: { S: note },
-//    },
-//  };
-//  try {
-//    const data = await client.send(new PutItemCommand(params));
-//    console.log("Success", data);
-//    return id;
-//  } catch (err) {
-//    console.log("Error", err);
-//    return null;
-//  }
-//};
-
-//const getAllNotes = async () => {
-//  const params = {
-//    TableName: process.env.TABLE_NAME,
-//  };
-//  try {
-//    const data = await client.send(new ScanCommand(params));
-//    console.log("Success", data);
-//    return data.Items;
-//  } catch (err) {
-//    console.log("Error", err);
-//    throw new Error("Failed to get notes from DB");
-//  }
-//};
