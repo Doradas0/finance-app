@@ -6,6 +6,7 @@
     "build": "cd client && tsc && vite build",
     "preview": "cd client && vite preview",
     "deploy": "cd ./server && cdk deploy --profile main",
+    "watch": "cd ./server && cdk watch --profile main",
     "test": "jest"
   },
   "license": "ISC"

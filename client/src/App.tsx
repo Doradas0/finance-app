@@ -25,11 +25,6 @@ function App() {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <div className="App">
-          <div>
-            <a href="https://vitejs.dev" target="_blank">
-              <img src="/vite.svg" className="logo" alt="Vite logo" />
-            </a>
-          </div>
           <h1>Vite & React</h1>
           <div className="card">
             <button onClick={() => setCount((count) => count + 1)}>

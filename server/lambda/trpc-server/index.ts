@@ -34,24 +34,6 @@ const appRouter = t.router({
     console.log("getExpenses", expenses);
     return expenses;
   }),
-  // greet: t.procedure
-  //   .input(z.object({ name: z.string() }))
-  //   .query(({ input }) => {
-  //     return `Hello ${input.name}!`;
-  //   }),
-  // saveNote: t.procedure
-  //   .input(z.object({ note: z.string() }))
-  //   .mutation(async ({ input }) => {
-  //     // save to db
-  //     const id = await saveNoteToDB(input.note);
-  //     if (!id) {
-  //       throw new Error("Failed to save note");
-  //     }
-  //     return id;
-  //   }),
-  // listNotes: t.procedure.query(async () => {
-  //   return await getAllNotes();
-  // }),
 });
 
 // export type definition of API
