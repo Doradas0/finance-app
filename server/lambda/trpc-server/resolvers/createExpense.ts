@@ -14,7 +14,7 @@ type ExpenseItem = {
 };
 
 
-export const saveNoteToDB = async (expenseItem: ExpenseItem) => {
+export const createExpense = async (expenseItem: ExpenseItem) => {
   const id = AWS.util.uuid.v4();
   const params = {
     TableName: process.env.TABLE_NAME,

@@ -1,6 +1,7 @@
 import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { getExpenses } from "./resolvers/getExpenses";
-// import { z } from "zod";
+import { createExpense } from "./resolvers/createExpense";
+import { z } from "zod";
 
 import {
   CreateAWSLambdaContextOptions,
@@ -15,6 +16,18 @@ const appRouter = t.router({
     console.log("hello, REQ", req);
     return "Hello World!";
   }),
+  createExpense: t.procedure
+    .input(
+      z.object({
+        value: z.number(),
+        description: z.string(),
+        date: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      console.log("createExpense", input);
+      return createExpense(input);
+    }),
   getExpenses: t.procedure.query(async () => {
     console.log("getExpenses");
     const expenses = await getExpenses();
