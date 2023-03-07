@@ -17,7 +17,7 @@ export class FinanceAppStack extends Stack {
     });
 
     const Server = new NodejsFunction(this, "FinanceAppServer", {
-      entry: path.join(__dirname, "..", "lambda", "trpc-server", "index.ts"),
+      entry: path.join(__dirname, "..", "lambda", "trpc", "server.ts"),
       handler: "main",
       runtime: Runtime.NODEJS_18_X,
       logRetention: 1,

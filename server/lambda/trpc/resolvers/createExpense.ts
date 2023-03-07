@@ -2,17 +2,15 @@ const AWS = require("aws-sdk");
 import {
   DynamoDBClient,
   PutItemCommand,
-  ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 
 const client = new DynamoDBClient({ region: "eu-west-1" });
 
 type ExpenseItem = {
-  value: number;
+  amount: number;
   description: string;
   date: string;
 };
-
 
 export const createExpense = async (expenseItem: ExpenseItem) => {
   const id = AWS.util.uuid.v4();
@@ -21,7 +19,8 @@ export const createExpense = async (expenseItem: ExpenseItem) => {
     Item: {
       PK: { S: `Expense#${id}` },
       SK: { S: `Expense#${id}` },
-      value: { N: expenseItem.value.toString() },
+      id: { S: id },
+      amount: { N: expenseItem.amount.toString() },
       description: { S: expenseItem.description },
       date: { S: expenseItem.date },
     },

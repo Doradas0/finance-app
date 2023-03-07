@@ -19,7 +19,7 @@ const appRouter = t.router({
   createExpense: t.procedure
     .input(
       z.object({
-        value: z.number(),
+        amount: z.number(),
         description: z.string(),
         date: z.string(),
       })
