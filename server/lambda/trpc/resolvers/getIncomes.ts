@@ -7,14 +7,13 @@ import {
 const client = new DynamoDBClient({ region: "eu-west-1" });
 
 export const getExpenses = async () => {
-  //query income where PK value begins with "Income#"
   const params = {
     TableName: process.env.TABLE_NAME,
-    KeyConditionExpression: "PK BEGINS_WITH :pk",
+    KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
     ExpressionAttributeValues: {
-      ":pk": { S: "Income#" },
+      ":pk": { S: "User#1234" },
+      ":sk": { S: "Income#" },
     },
-
   };
 
   try {

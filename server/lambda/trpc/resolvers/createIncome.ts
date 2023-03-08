@@ -9,7 +9,7 @@ export const createIncome = async (income: IncomeItem) => {
   const params = {
     TableName: process.env.TABLE_NAME,
     Item: {
-      PK: { S: `Income#${id}` },
+      PK: { S: "User#1234" },
       SK: { S: `Income#${id}` },
       id: { S: id },
       amount: { N: income.amount.toString() },

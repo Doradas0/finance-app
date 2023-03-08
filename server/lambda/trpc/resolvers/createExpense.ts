@@ -9,7 +9,7 @@ export const createExpense = async (expenseItem: ExpenseItem) => {
   const params = {
     TableName: process.env.TABLE_NAME,
     Item: {
-      PK: { S: `Expense#${id}` },
+      PK: { S: "User#1234" },
       SK: { S: `Expense#${id}` },
       id: { S: id },
       amount: { N: expenseItem.amount.toString() },
