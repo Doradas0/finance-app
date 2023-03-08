@@ -13,12 +13,14 @@ export default function ExpenseForm({ onSubmit }: { onSubmit: () => void }) {
       amount: Number(formData.get("amount")),
       description: formData.get("description"),
       date: formData.get("date"),
+      category: formData.get("category"),
     };
     const schema = z.object({
       amount: z.number().positive(),
       description: z.string().min(1),
       //date is iso string format
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      category: z.string().min(1),
     });
     const expense = schema.parse(data);
     console.log(expense);
@@ -37,6 +39,10 @@ export default function ExpenseForm({ onSubmit }: { onSubmit: () => void }) {
       <label>
         Date:
         <input type="date" name="date" />
+      </label>
+      <label>
+        Category:
+        <input type="text" name="category" />
       </label>
       <input type="submit" value="Submit" />
     </form>

@@ -12,16 +12,13 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 export const t = initTRPC.create();
 
 const appRouter = t.router({
-  hello: t.procedure.query((req) => {
-    console.log("hello, REQ", req);
-    return "Hello World!";
-  }),
   createExpense: t.procedure
     .input(
       z.object({
         amount: z.number(),
         description: z.string(),
         date: z.string(),
+        category: z.string(),
       })
     )
     .mutation(async ({ input }) => {
@@ -30,9 +27,24 @@ const appRouter = t.router({
     }),
   getExpenses: t.procedure.query(async () => {
     console.log("getExpenses");
-    const expenses = await getExpenses();
-    console.log("getExpenses", expenses);
-    return expenses;
+    return await getExpenses();
+  }),
+  createIncome: t.procedure
+    .input(
+      z.object({
+        amount: z.number(),
+        description: z.string(),
+        date: z.string(),
+        category: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      console.log("createIncome", input);
+      return createIncome(input);
+    }),
+  getIncomes: t.procedure.query(async () => {
+    console.log("getIncomes");
+    return await getIncomes();
   }),
 });
 
