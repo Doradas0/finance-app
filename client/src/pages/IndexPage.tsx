@@ -11,10 +11,13 @@ export default function IndexPage() {
   if (expenses.status === 'error') {
     return <div>Error: {expenses.error.message}</div>;
   }
+  if (!expenses.data || expenses.data.length === 0) {
+    return <div>No expenses found</div>;
+  }
   const refetch = expenses.refetch;
   //order data by date ascending
   const sortedExpenses = expenses.data.sort((a, b) => {
-    return new Date(a.date.S).getTime() - new Date(b.date.S).getTime();
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
   return (
     <div>
