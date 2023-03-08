@@ -2,7 +2,7 @@ import React from "react";
 import { trpc } from "../utils/trpc";
 import { z } from "zod";
 
-export default function ExpenseForm() {
+export default function ExpenseForm({ onSubmit }: { onSubmit: () => void }) {
   const createExpenseCommande = trpc.createExpense.useMutation();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -17,11 +17,12 @@ export default function ExpenseForm() {
     const schema = z.object({
       amount: z.number().positive(),
       description: z.string().min(1),
-      date: z.string().min(1),
+      //date is iso string format
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     });
     const expense = schema.parse(data);
     console.log(expense);
-    createExpenseCommande.mutate(expense);
+    createExpenseCommande.mutate(expense)
   };
   return (
     <form onSubmit={handleSubmit}>
@@ -35,7 +36,7 @@ export default function ExpenseForm() {
       </label>
       <label>
         Date:
-        <input type="text" name="date" />
+        <input type="date" name="date" />
       </label>
       <input type="submit" value="Submit" />
     </form>

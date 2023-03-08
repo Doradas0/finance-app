@@ -6,7 +6,6 @@ import { httpBatchLink } from "@trpc/client";
 import { trpc } from "./utils/trpc";
 
 import IndexPage from "./pages/IndexPage";
-import ExpenseForm from "./pages/ExpenseForm";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -27,7 +26,6 @@ function App() {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <IndexPage />
-        <ExpenseForm />
       </QueryClientProvider>
     </trpc.Provider>
   );
