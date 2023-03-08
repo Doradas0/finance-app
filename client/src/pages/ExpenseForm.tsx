@@ -2,7 +2,7 @@ import React from "react";
 import { trpc } from "../utils/trpc";
 import { z } from "zod";
 
-export default function ExpenseForm({ onSubmit }: { onSubmit: () => void }) {
+export default function ExpenseForm() {
   const createExpenseCommande = trpc.createExpense.useMutation();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
