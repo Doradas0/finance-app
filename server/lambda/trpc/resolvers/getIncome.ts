@@ -6,7 +6,7 @@ import {
 
 const client = new DynamoDBClient({ region: "eu-west-1" });
 
-export const getExpenses = async () => {
+export const getIncome = async () => {
   const params = {
     TableName: process.env.TABLE_NAME,
     KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",

@@ -1,6 +1,8 @@
 import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { getExpenses } from "./resolvers/getExpenses";
 import { createExpense } from "./resolvers/createExpense";
+import { getIncome } from "./resolvers/getIncome";
+import { createIncome } from "./resolvers/createIncome";
 import { z } from "zod";
 
 import {
@@ -42,9 +44,9 @@ const appRouter = t.router({
       console.log("createIncome", input);
       return createIncome(input);
     }),
-  getIncomes: t.procedure.query(async () => {
+  getIncome: t.procedure.query(async () => {
     console.log("getIncomes");
-    return await getIncomes();
+    return await getIncome();
   }),
 });
 
