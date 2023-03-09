@@ -59,7 +59,7 @@ export default function IndexPage() {
   );
 
   const getIncome = () => {
-    const income = trpc.income.get.useQuery();
+    const income = trpc.getIncome.useQuery();
     const sortedIncome = income.data?.sort((a, b) => {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
