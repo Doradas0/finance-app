@@ -1,8 +1,9 @@
 import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { getExpenses } from "./resolvers/getExpenses";
 import { createExpense } from "./resolvers/createExpense";
+import { getIncome } from "./resolvers/getIncome";
+import { createIncome } from "./resolvers/createIncome";
 import { z } from "zod";
-import { incomeRouter } from "./routers/income";
 
 import {
   CreateAWSLambdaContextOptions,
@@ -12,23 +13,41 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 
 export const t = initTRPC.create();
 
-const expenseInput = z.object({
-  amount: z.number(),
-  description: z.string(),
-  date: z.string(),
-  category: z.string(),
-});
-
 const appRouter = t.router({
-  createExpense: t.procedure.input(expenseInput).mutation(async ({ input }) => {
-    console.log("createExpense", input);
-    return createExpense(input);
-  }),
+  createExpense: t.procedure
+    .input(
+      z.object({
+        amount: z.number(),
+        description: z.string(),
+        date: z.string(),
+        category: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      console.log("createExpense", input);
+      return createExpense(input);
+    }),
   getExpenses: t.procedure.query(async () => {
     console.log("getExpenses");
     return await getExpenses();
   }),
-  income: incomeRouter,
+  createIncome: t.procedure
+    .input(
+      z.object({
+        amount: z.number(),
+        description: z.string(),
+        date: z.string(),
+        category: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      console.log("createIncome", input);
+      return createIncome(input);
+    }),
+  getIncome: t.procedure.query(async () => {
+    console.log("getIncomes");
+    return await getIncome();
+  }),
 });
 
 // export type definition of API
