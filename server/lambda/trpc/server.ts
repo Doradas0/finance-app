@@ -13,7 +13,13 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 
 export const t = initTRPC.create();
 
-const appRouter = t.router({
+const helloRouter = t.router({
+  hello: t.procedure.query(() => {
+    return "Hello World"
+  })
+});
+
+const financeRouter = t.router({
   createExpense: t.procedure
     .input(
       z.object({
@@ -49,6 +55,8 @@ const appRouter = t.router({
     return await getIncome();
   }),
 });
+
+const appRouter = t.mergeRouters(helloRouter, financeRouter);
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
