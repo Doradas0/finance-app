@@ -1,108 +1,114 @@
 import React from "react";
 import { trpc } from "../utils/trpc";
-
-import ExpenseForm from "./ExpenseForm";
-import IncomeForm from "./IncomeForm";
-
-const totalMonthlyExpenses = (expenses) =>
-  expenses.reduce((acc, expense) => {
-    const date = new Date(expense.date);
-    const now = new Date();
-    if (date.getMonth() === now.getMonth()) {
-      return acc + parseFloat(expense.amount);
-    }
-    return acc;
-  }, 0);
-
-const totalMonthlyIncome = (income) =>
-  income.reduce((acc, income) => {
-    const date = new Date(income.date);
-    const now = new Date();
-    if (date.getMonth() === now.getMonth()) {
-      return acc + parseFloat(income.amount);
-    }
-    return acc;
-  }, 0);
+import {z} from 'zod'
 
 export default function IndexPage() {
-  const getExpenses = () => {
-    const expenses = trpc.getExpenses.useQuery();
-    //order data by date ascending
-    const sortedExpenses = expenses.data?.sort((a, b) => {
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
-    return sortedExpenses;
-  };
-  const expenses = getExpenses();
-  const totalExpenses = expenses ? totalMonthlyExpenses(expenses) : 0;
-  const dataTable = () => (
-    <table>
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th>Amount</th>
-          <th>Date</th>
-          <th>Category</th>
-        </tr>
-      </thead>
-      <tbody>
-        {expenses.map((expense) => (
-          <tr key={expense.id}>
-            <td>{expense.description}</td>
-            <td>{expense.amount}</td>
-            <td>{expense.date}</td>
-            <td>{expense.category}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
 
-  const getIncome = () => {
-    const income = trpc.getIncome.useQuery();
-    const sortedIncome = income.data?.sort((a, b) => {
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
+  const handleFormSubmit = (event) => {
+    const { description, amount, date, category, type } = event;
+    const schema = z.object({
+      amount: z.number().positive(),
+      description: z.string().min(1),
+      //date is iso string format
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      category: z.string().min(1),
+      type: z.string().min(1),
     });
-    return sortedIncome;
+    const data = schema.parse({ description, amount, date, category, type });
   };
-  const income = getIncome();
-  const totalIncome = income ? totalMonthlyIncome(income) : 0;
 
   return (
     <div>
       <h1>Expenses</h1>
-      <ExpenseForm />
-      <p>Total this month: {totalExpenses}</p>
-      {expenses ? dataTable() : <p>Loading...</p>}
+      <p>Total this month: </p>
+      <FinanceForm type="expense" onSubmit={handleFormSubmit} />
+      <DataTable transactionData={[]} />
       <h1>Income</h1>
-      <IncomeForm />
-      <p>Total this month: {totalIncome}</p>
-      {income ? (
-        <table>
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th>Category</th>
-            </tr>
-          </thead>
-          <tbody>
-            {income.map((income) => (
-              <tr key={income.id}>
-                <td>{income.description}</td>
-                <td>{income.amount}</td>
-                <td>{income.date}</td>
-                <td>{income.category}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>Loading...</p>
-      )}
+      <p>Total this month: </p>
+      <FinanceForm type="income" onSubmit={handleFormSubmit} />
+      <DataTable transactionData={[]} />
       <h1>Net</h1>
-      <p>{totalIncome - totalExpenses}</p>
+      <p>Total this month: </p>
     </div>
   );
 }
+
+const FinanceForm = ({ type, onSubmit }) => {
+  const [description, setDescription] = React.useState("");
+  const [amount, setAmount] = React.useState("");
+  const [date, setDate] = React.useState("");
+  const [category, setCategory] = React.useState("");
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    onSubmit({ description, amount, date, category, type });
+    setDescription("");
+    setAmount("");
+    setDate("");
+    setCategory("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Description
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </label>
+      <label>
+        Amount
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+      </label>
+      <label>
+        Date
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </label>
+      <label>
+        Category
+        <input
+          type="text"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        />
+      </label>
+      <button type="submit">Submit {type}</button>
+    </form>
+  );
+}
+
+const DataTable = (props: {transactionData: any[]}) => {
+  const { transactionData } = props;
+  return (
+    <table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Date</th>
+      <th>Category</th>
+    </tr>
+  </thead>
+  <tbody>
+  {transactionData.map((transaction) => (
+    <tr key={transaction?.id}>
+      <td>{transaction?.description}</td>
+      <td>{transaction?.amount}</td>
+      <td>{transaction?.date}</td>
+      <td>{transaction?.category}</td>
+    </tr>
+))}
+    </tbody>
+  </table>
+  )
+};
