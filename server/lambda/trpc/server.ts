@@ -52,10 +52,8 @@ const transactionRouter = t.router({
       };
       try {
         const data = await client.send(new PutItemCommand(params));
-        console.log("Success", data);
         return id;
       } catch (err) {
-        console.log("Error", err);
         return null;
       }
     }),
@@ -69,10 +67,8 @@ const transactionRouter = t.router({
     };
     try {
       const data = await client.send(new QueryCommand(params));
-      console.log("Success", data);
       return data;
     } catch (err) {
-      console.log("Error", err);
       return null;
     }
   }),
@@ -88,7 +84,6 @@ const createContext = ({
   event,
   context,
 }: CreateAWSLambdaContextOptions<APIGatewayProxyEvent>) => {
-  console.log("createContext", event, context);
   return {};
 };
 
@@ -100,7 +95,6 @@ export const main = async (event: APIGatewayProxyEvent, context: any) => {
     createContext,
   });
   const result = await handler(event, context);
-  console.log("result", result);
   result.headers = {
     ...result.headers,
     "Access-Control-Allow-Origin": "*",
