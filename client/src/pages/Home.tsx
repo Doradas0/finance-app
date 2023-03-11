@@ -2,7 +2,7 @@ import React from "react";
 import { trpc } from "../utils/trpc";
 import {z} from 'zod'
 
-export default function IndexPage() {
+export default function Home() {
 
   const sendTransaction = trpc.createTransaction.useMutation();
 

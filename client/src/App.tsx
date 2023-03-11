@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { trpc } from "./utils/trpc";
 
-import IndexPage from "./pages/IndexPage";
+import Home from "./pages/Home";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -25,7 +25,7 @@ function App() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <IndexPage />
+        <Home />
       </QueryClientProvider>
     </trpc.Provider>
   );
