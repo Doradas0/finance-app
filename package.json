@@ -9,5 +9,8 @@
     "watch": "cd ./server && cdk watch --profile main",
     "test": "jest"
   },
+  "devDependencies": {
+    "prettier": "2.8.1"
+  },
   "license": "ISC"
 }
