@@ -6,8 +6,8 @@ import {
 
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { z } from "zod";
+import { uuid } from 'uuidv4';
 
-const AWS = require("aws-sdk");
 import {
   DynamoDBClient,
   PutItemCommand,
@@ -28,7 +28,7 @@ const transactionRouter = t.router({
   createTransaction: t.procedure
     .input(
       z.object({
-        amount: z.number(),
+        amount: z.string(),
         description: z.string(),
         date: z.string(),
         category: z.string(),
@@ -36,14 +36,14 @@ const transactionRouter = t.router({
       })
     )
     .mutation(async ({ input }) => {
-      const id = AWS.util.uuid.v4();
+      const id = uuid();
       const params = {
         TableName: process.env.TABLE_NAME,
         Item: {
           PK: { S: "User#1234" },
-          SK: { S: `Transaction#{id}` },
+          SK: { S: `Transaction#${id}` },
           id: { S: id },
-          amount: { N: input.amount.toString() },
+          amount: { N: input.amount },
           description: { S: input.description },
           date: { S: input.date },
           category: { S: input.category },
@@ -51,7 +51,7 @@ const transactionRouter = t.router({
         },
       };
       try {
-        const data = await client.send(new PutItemCommand(params));
+        await client.send(new PutItemCommand(params));
         return id;
       } catch (err) {
         return null;
@@ -67,7 +67,17 @@ const transactionRouter = t.router({
     };
     try {
       const data = await client.send(new QueryCommand(params));
-      return data;
+      const items = data.Items?.map((item) => {
+        return {
+          id: item.id.S,
+          amount: item.amount.N,
+          description: item.description.S,
+          date: item.date.S,
+          category: item.category.S,
+          type: item.type.S,
+        };
+      });
+      return items;
     } catch (err) {
       return null;
     }
@@ -80,12 +90,10 @@ const appRouter = t.mergeRouters(helloRouter, transactionRouter);
 export type AppRouter = typeof appRouter;
 
 // created for each request
-const createContext = ({
-  event,
-  context,
-}: CreateAWSLambdaContextOptions<APIGatewayProxyEvent>) => {
-  return {};
-};
+const createContext =
+  ({}: CreateAWSLambdaContextOptions<APIGatewayProxyEvent>) => {
+    return {};
+  };
 
 export type Context = inferAsyncReturnType<typeof createContext>;
 
