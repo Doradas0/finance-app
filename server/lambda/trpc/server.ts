@@ -8,14 +8,32 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { z } from "zod";
 import { uuid } from "uuidv4";
 
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
-  DynamoDBClient,
-  PutItemCommand,
+  DynamoDBDocumentClient,
+  PutCommand,
   QueryCommand,
-  DeleteItemCommand,
-} from "@aws-sdk/client-dynamodb";
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
 
-const client = new DynamoDBClient({ region: "eu-west-1" });
+const database = new DynamoDBClient({ region: "eu-west-1" });
+const marshallOptions = {
+  // Whether to automatically convert empty strings, blobs, and sets to `null`.
+  convertEmptyValues: true, // false, by default.
+  // Whether to remove undefined values while marshalling.
+  removeUndefinedValues: true, // false, by default.
+  // Whether to convert typeof object to map attribute.
+  convertClassInstanceToMap: true, // false, by default.
+};
+
+const unmarshallOptions = {
+  // Whether to return numbers as a string instead of converting them to native JavaScript numbers.
+  wrapNumbers: true, // false, by default.
+};
+const client = DynamoDBDocumentClient.from(database, {
+  marshallOptions,
+  unmarshallOptions,
+});
 
 export const t = initTRPC.create();
 
@@ -41,41 +59,42 @@ const transactionRouter = t.router({
       const params = {
         TableName: process.env.TABLE_NAME,
         Item: {
-          PK: { S: "User#1234" },
-          SK: { S: `Transaction#${id}` },
-          id: { S: id },
-          amount: { N: input.amount },
-          description: { S: input.description },
-          date: { S: input.date },
-          category: { S: input.category },
-          type: { S: input.type },
+          PK: "User#1234",
+          SK: `Transaction#${id}`,
+          id: id,
+          amount: input.amount,
+          description: input.description,
+          date: input.date,
+          category: input.category,
+          type: input.type,
         },
       };
       try {
-        await client.send(new PutItemCommand(params));
+        await client.send(new PutCommand(params));
         return id;
       } catch (err) {
         return null;
       }
     }),
+
   listTransactions: t.procedure.query(async () => {
     const params = {
       TableName: process.env.TABLE_NAME,
       KeyConditionExpression: "PK = :pk",
       ExpressionAttributeValues: {
-        ":pk": { S: "User#1234" },
+        ":pk": "User#1234",
       },
     };
     try {
       const data = await client.send(new QueryCommand(params));
       const items = data.Items?.map((item) => {
         return {
-          id: item.id.S,
-          amount: item.amount.N,
-          description: item.description.S,
-          date: item.date.S,
-          category: item.category.S,
-          type: item.type.S,
+          id: item.id,
+          amount: item.amount,
+          description: item.description,
+          date: item.date,
+          category: item.category,
+          type: item.type,
         };
       });
       return items;
@@ -83,23 +102,25 @@ const transactionRouter = t.router({
       return null;
     }
   }),
+
   deleteTransaction: t.procedure
     .input(z.string())
     .mutation(async ({ input }) => {
       const params = {
         TableName: process.env.TABLE_NAME,
         Key: {
-          PK: { S: "User#1234" },
-          SK: { S: `Transaction#${input}` },
+          PK: "User#1234",
+          SK: `Transaction#${input}`,
         },
       };
       try {
-        await client.send(new DeleteItemCommand(params));
+        await client.send(new DeleteCommand(params));
         return input;
       } catch (err) {
         return null;
       }
     }),
+
 });
 
 const appRouter = t.mergeRouters(helloRouter, transactionRouter);
