@@ -37,12 +37,6 @@ const client = DynamoDBDocumentClient.from(database, {
 
 export const t = initTRPC.create();
 
-const helloRouter = t.router({
-  hello: t.procedure.query(() => {
-    return "Hello World";
-  }),
-});
-
 const transactionRouter = t.router({
   createTransaction: t.procedure
     .input(
@@ -123,7 +117,7 @@ const transactionRouter = t.router({
 
 });
 
-const appRouter = t.mergeRouters(helloRouter, transactionRouter);
+const appRouter = t.mergeRouters(transactionRouter);
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
