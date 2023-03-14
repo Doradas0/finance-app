@@ -6,12 +6,13 @@ import {
 
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { z } from "zod";
-import { uuid } from 'uuidv4';
+import { uuid } from "uuidv4";
 
 import {
   DynamoDBClient,
   PutItemCommand,
   QueryCommand,
+  DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
 const client = new DynamoDBClient({ region: "eu-west-1" });
@@ -82,6 +83,23 @@ const transactionRouter = t.router({
       return null;
     }
   }),
+  deleteTransaction: t.procedure
+    .input(z.string())
+    .mutation(async ({ input }) => {
+      const params = {
+        TableName: process.env.TABLE_NAME,
+        Key: {
+          PK: { S: "User#1234" },
+          SK: { S: `Transaction#${input}` },
+        },
+      };
+      try {
+        await client.send(new DeleteItemCommand(params));
+        return input;
+      } catch (err) {
+        return null;
+      }
+    }),
 });
 
 const appRouter = t.mergeRouters(helloRouter, transactionRouter);

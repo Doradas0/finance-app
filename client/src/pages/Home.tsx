@@ -1,10 +1,10 @@
 import React from "react";
 import { trpc } from "../utils/trpc";
-import {z} from 'zod'
+import { z } from "zod";
 
 export default function Home() {
-
   const sendTransaction = trpc.createTransaction.useMutation();
+  const deleteTransaction = trpc.deleteTransaction.useMutation();
 
   const handleFormSubmit = (event) => {
     const { description, amount, date, category, type } = event;
@@ -16,8 +16,14 @@ export default function Home() {
       category: z.string().min(1),
       type: z.string().min(1),
     });
-    const data = schema.parse({ description, amount, date, category, type });
-    sendTransaction.mutate(data);
+    const transaction = schema.parse({
+      description,
+      amount,
+      date,
+      category,
+      type,
+    });
+    sendTransaction.mutate(transaction);
   };
 
   const { data, error } = trpc.listTransactions.useQuery();
@@ -26,21 +32,57 @@ export default function Home() {
     console.log(error);
   }
 
-  const incomeData = data?.filter((transaction) => transaction.type === "income");
-  const expenseData = data?.filter((transaction) => transaction.type === "expense");
+  const incomeData = data?.filter(
+    (transaction) => transaction.type === "income"
+  );
+  const expenseData = data?.filter(
+    (transaction) => transaction.type === "expense"
+  );
+
+  const incomeTotal = incomeData?.reduce(
+    (acc, curr) => acc + parseInt(curr.amount),
+    0
+  );
+  const expenseTotal = expenseData?.reduce(
+    (acc, curr) => acc + parseInt(curr.amount),
+    0
+  );
+  const balance = incomeTotal - expenseTotal;
+
+  const handleDelete = (id: string) => {
+    deleteTransaction.mutate(id);
+  };
+
+  const sortData = (data, field) => {
+    return data?.sort((a, b) => {
+      if (a[field] < b[field]) {
+        return -1;
+      }
+      if (a[field] > b[field]) {
+        return 1;
+      }
+      return 0;
+    });
+  };
 
   return (
     <div>
       <h1>Expenses</h1>
-      <p>Total this month: </p>
+      <p>Total this month: {expenseTotal} </p>
       <FinanceForm type="expense" onSubmit={handleFormSubmit} />
-      <DataTable transactionData={expenseData} />
+      <DataTable
+        transactionData={sortData(expenseData, "date")}
+        handleDelete={handleDelete}
+      />
       <h1>Income</h1>
-      <p>Total this month: </p>
+      <p>Total this month: {incomeTotal} </p>
       <FinanceForm type="income" onSubmit={handleFormSubmit} />
-      <DataTable transactionData={incomeData} />
+      <DataTable
+        transactionData={sortData(incomeData, "date")}
+        handleDelete={handleDelete}
+      />
       <h1>Net</h1>
-      <p>Total this month: </p>
+      <p>Total this month: {balance} </p>
     </div>
   );
 }
