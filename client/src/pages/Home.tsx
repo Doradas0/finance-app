@@ -27,6 +27,9 @@ export default function Home() {
     return <div>No transactions</div>
   }
 
+  type Transaction = typeof transactions.data[0];
+  type TransactionKeys = keyof Transaction;
+
   const expenses = transactions.data.filter((transaction) => transaction.type === "expense");
   const income = transactions.data.filter((transaction) => transaction.type === "income");
 
@@ -39,7 +42,7 @@ export default function Home() {
     deleteTransaction.mutate(id);
   };
 
-  const sortData = (data, field) => {
+  const sortData = (data: Transaction[], field: TransactionKeys) => {
     return data?.sort((a, b) => {
       if (a[field] < b[field]) {
         return -1;
