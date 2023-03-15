@@ -7,7 +7,7 @@ export default function Home() {
   const deleteTransaction = trpc.deleteTransaction.useMutation();
 
   const handleFormSubmit = (event) => {
-    const { description, amount, date, category, type } = event;
+    const { description, amount, date, category, type, recurring } = event;
     const schema = z.object({
       amount: z.string(),
       description: z.string().min(1),
@@ -15,6 +15,7 @@ export default function Home() {
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       category: z.string().min(1),
       type: z.string().min(1),
+      recurring: z.string().min(1),
     });
     const transaction = schema.parse({
       description,
@@ -22,6 +23,7 @@ export default function Home() {
       date,
       category,
       type,
+      recurring,
     });
     sendTransaction.mutate(transaction);
   };
@@ -92,6 +94,7 @@ const FinanceForm = ({ type, onSubmit }) => {
   const [amount, setAmount] = React.useState("");
   const [date, setDate] = React.useState("");
   const [category, setCategory] = React.useState("");
+  const [recurring, setRecurring] = React.useState(false);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -100,6 +103,7 @@ const FinanceForm = ({ type, onSubmit }) => {
     setAmount("");
     setDate("");
     setCategory("");
+    setRecurring(false);
   };
 
   return (
@@ -136,36 +140,52 @@ const FinanceForm = ({ type, onSubmit }) => {
           onChange={(e) => setCategory(e.target.value)}
         />
       </label>
+      <label>
+        Recurring
+        <input
+          type="checkbox"
+          checked={recurring}
+          onChange={(e) => setRecurring(e.target.checked)}
+        />
+      </label>
       <button type="submit">Submit {type}</button>
     </form>
   );
-}
+};
 
-const DataTable = (props: {transactionData: any[]}) => {
-  const { transactionData } = props;
+const DataTable = (props: {
+  transactionData: any[];
+  handleDelete: (id: string) => void;
+}) => {
+  const { transactionData, handleDelete } = props;
   if (!transactionData) {
     return null;
   }
   return (
     <table>
-  <thead>
-    <tr>
-      <th>Description</th>
-      <th>Amount</th>
-      <th>Date</th>
-      <th>Category</th>
-    </tr>
-  </thead>
-  <tbody>
-  {transactionData.map((transaction) => (
-    <tr key={transaction?.id}>
-      <td>{transaction?.description}</td>
-      <td>{transaction?.amount}</td>
-      <td>{transaction?.date}</td>
-      <td>{transaction?.category}</td>
-    </tr>
-))}
-    </tbody>
-  </table>
-  )
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        {transactionData.map((transaction) => (
+          <tr key={transaction?.id}>
+            <td>{transaction?.description}</td>
+            <td>{transaction?.amount}</td>
+            <td>{transaction?.date}</td>
+            <td>{transaction?.category}</td>
+            <td>
+              <button onClick={() => handleDelete(transaction?.id)}>
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 };
