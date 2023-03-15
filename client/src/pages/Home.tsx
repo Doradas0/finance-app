@@ -1,55 +1,39 @@
-import React from "react";
+import React from 'react';
 import { trpc } from "../utils/trpc";
-import { z } from "zod";
 
 export default function Home() {
   const sendTransaction = trpc.createTransaction.useMutation();
   const deleteTransaction = trpc.deleteTransaction.useMutation();
 
-  const handleFormSubmit = (event) => {
-    const { description, amount, date, category, type, recurring } = event;
-    const schema = z.object({
-      amount: z.string(),
-      description: z.string().min(1),
-      //date is iso string format
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      category: z.string().min(1),
-      type: z.string().min(1),
-      recurring: z.string().min(1),
-    });
-    const transaction = schema.parse({
-      description,
-      amount,
-      date,
-      category,
-      type,
-      recurring,
-    });
+  const handleFormSubmit = () => {
+    const transaction = {
+      amount: "100",
+      description: "test",
+      date: new Date().toISOString(),
+      category: "test",
+      type: "expense",
+      recurring: false,
+    };
     sendTransaction.mutate(transaction);
   };
 
-  const { data, error } = trpc.listTransactions.useQuery();
+  const transactions = trpc.listTransactions.useQuery();
 
-  if (error) {
-    console.log(error);
+  if(transactions.isLoading) {
+    return <div>Loading...</div>
   }
 
-  const incomeData = data?.filter(
-    (transaction) => transaction.type === "income"
-  );
-  const expenseData = data?.filter(
-    (transaction) => transaction.type === "expense"
-  );
+  if(!transactions.data) {
+    return <div>No transactions</div>
+  }
 
-  const incomeTotal = incomeData?.reduce(
-    (acc, curr) => acc + parseInt(curr.amount),
-    0
-  );
-  const expenseTotal = expenseData?.reduce(
-    (acc, curr) => acc + parseInt(curr.amount),
-    0
-  );
-  const balance = incomeTotal - expenseTotal;
+  const expenses = transactions.data.filter((transaction) => transaction.type === "expense");
+  const income = transactions.data.filter((transaction) => transaction.type === "income");
+
+  const totalExpenses = expenses.reduce((acc, transaction) => acc + Number(transaction.amount), 0);
+  const totalIncome = income.reduce((acc, transaction) => acc + Number(transaction.amount), 0);
+
+  const balance = totalIncome - totalExpenses;
 
   const handleDelete = (id: string) => {
     deleteTransaction.mutate(id);
@@ -70,17 +54,17 @@ export default function Home() {
   return (
     <div>
       <h1>Expenses</h1>
-      <p>Total this month: {expenseTotal} </p>
+      <p>Total this month: {totalExpenses} </p>
       <FinanceForm type="expense" onSubmit={handleFormSubmit} />
       <DataTable
-        transactionData={sortData(expenseData, "date")}
+        transactionData={sortData(expenses, "date")}
         handleDelete={handleDelete}
       />
       <h1>Income</h1>
-      <p>Total this month: {incomeTotal} </p>
+      <p>Total this month: {totalIncome} </p>
       <FinanceForm type="income" onSubmit={handleFormSubmit} />
       <DataTable
-        transactionData={sortData(incomeData, "date")}
+        transactionData={sortData(income, "date")}
         handleDelete={handleDelete}
       />
       <h1>Net</h1>

@@ -46,7 +46,7 @@ const transactionRouter = t.router({
         date: z.string(),
         category: z.string(),
         type: z.string(),
-        recurring: z.string(),
+        recurring: z.boolean(),
       })
     )
     .mutation(async ({ input }) => {
@@ -73,31 +73,49 @@ const transactionRouter = t.router({
       }
     }),
 
-  listTransactions: t.procedure.query(async () => {
-    const params = {
-      TableName: process.env.TABLE_NAME,
-      KeyConditionExpression: "PK = :pk",
-      ExpressionAttributeValues: {
-        ":pk": "User#1234",
-      },
-    };
-    try {
-      const data = await client.send(new QueryCommand(params));
-      const items = data.Items?.map((item) => {
-        return {
-          id: item.id,
-          amount: item.amount,
-          description: item.description,
-          date: item.date,
-          category: item.category,
-          type: item.type,
-        };
-      });
-      return items;
-    } catch (err) {
-      return null;
-    }
-  }),
+  listTransactions: t.procedure
+    .input(z.undefined())
+    .output(
+      z
+        .array(
+          z.object({
+            id: z.string(),
+            amount: z.string(),
+            description: z.string(),
+            date: z.string(),
+            category: z.string(),
+            type: z.string(),
+            recurring: z.boolean(),
+          })
+        )
+        .nullish()
+    )
+    .query(async () => {
+      const params = {
+        TableName: process.env.TABLE_NAME,
+        KeyConditionExpression: "PK = :pk",
+        ExpressionAttributeValues: {
+          ":pk": "User#1234",
+        },
+      };
+      try {
+        const data = await client.send(new QueryCommand(params));
+        const items = data.Items?.map((item) => {
+          return {
+            id: item.id,
+            amount: item.amount,
+            description: item.description,
+            date: item.date,
+            category: item.category,
+            type: item.type,
+            recurring: item.recurring,
+          };
+        });
+        return items;
+      } catch (err) {
+        return null;
+      }
+    }),
 
   deleteTransaction: t.procedure
     .input(z.string())
@@ -116,7 +134,6 @@ const transactionRouter = t.router({
         return null;
       }
     }),
-
 });
 
 const appRouter = t.mergeRouters(transactionRouter);
