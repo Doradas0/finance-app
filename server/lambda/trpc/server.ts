@@ -46,7 +46,7 @@ const transactionRouter = t.router({
         date: z.string(),
         category: z.string(),
         type: z.string(),
-        recurring: z.boolean(),
+        recurring: z.string(),
       })
     )
     .mutation(async ({ input }) => {
@@ -85,7 +85,7 @@ const transactionRouter = t.router({
             date: z.string(),
             category: z.string(),
             type: z.string(),
-            recurring: z.boolean(),
+            recurring: z.string(),
           })
         )
         .nullish()
