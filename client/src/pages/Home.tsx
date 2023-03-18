@@ -1,20 +1,16 @@
 import React from 'react';
-import { trpc } from "../utils/trpc";
+import { trpc, RouterInput} from "../utils/trpc";
+import { z } from "zod";
+
+type Sendtransaction = RouterInput['createTransaction'];
 
 export default function Home() {
-  const sendTransaction = trpc.createTransaction.useMutation();
+  const createTransaction = trpc.createTransaction.useMutation();
   const deleteTransaction = trpc.deleteTransaction.useMutation();
 
-  const handleFormSubmit = () => {
-    const transaction = {
-      amount: "100",
-      description: "test",
-      date: new Date().toISOString(),
-      category: "test",
-      type: "expense",
-      recurring: false,
-    };
-    sendTransaction.mutate(transaction);
+
+  const handleFormSubmit = (transaction: Sendtransaction) => {
+    createTransaction.mutate(transaction);
   };
 
   const transactions = trpc.listTransactions.useQuery();
@@ -58,14 +54,14 @@ export default function Home() {
     <div>
       <h1>Expenses</h1>
       <p>Total this month: {totalExpenses} </p>
-      <FinanceForm type="expense" onSubmit={handleFormSubmit} />
+      <FinanceForm type="expense" submitForm={handleFormSubmit} />
       <DataTable
         transactionData={sortData(expenses, "date")}
         handleDelete={handleDelete}
       />
       <h1>Income</h1>
       <p>Total this month: {totalIncome} </p>
-      <FinanceForm type="income" onSubmit={handleFormSubmit} />
+      <FinanceForm type="income" submitForm={handleFormSubmit} />
       <DataTable
         transactionData={sortData(income, "date")}
         handleDelete={handleDelete}
@@ -76,66 +72,55 @@ export default function Home() {
   );
 }
 
-const FinanceForm = ({ type, onSubmit }) => {
-  const [description, setDescription] = React.useState("");
-  const [amount, setAmount] = React.useState("");
-  const [date, setDate] = React.useState("");
-  const [category, setCategory] = React.useState("");
-  const [recurring, setRecurring] = React.useState(false);
+type FinanceFormProps = {
+  type: "income" | "expense";
+  submitForm: (date: Sendtransaction) => void;
+}
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    onSubmit({ description, amount, date, category, type });
-    setDescription("");
-    setAmount("");
-    setDate("");
-    setCategory("");
-    setRecurring(false);
+const FinanceForm = (props: FinanceFormProps) => {
+  const { type, submitForm } = props;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const schema = z.object({
+      amount: z.string().min(1),
+      date: z.string().min(1),
+      description: z.string().min(1),
+      category: z.string().min(1),
+      recurring: z.string().min(1),
+      type: z.string().min(1),
+    });
+    const data = schema.safeParse({
+      amount: formData.get("amount"),
+      date: formData.get("date"),
+      description: formData.get("description"),
+      category: formData.get("category"),
+      recurring: formData.get("recurring"),
+      type: type,
+    })
+    if(data.success) {
+      submitForm(data.data);
+    }
+    if (!data.success) {
+      alert("Please fill out all fields");
+      console.log(data.error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>
-        Description
-        <input
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </label>
-      <label>
-        Amount
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-      </label>
-      <label>
-        Date
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-      </label>
-      <label>
-        Category
-        <input
-          type="text"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
-      </label>
-      <label>
-        Recurring
-        <input
-          type="checkbox"
-          checked={recurring}
-          onChange={(e) => setRecurring(e.target.checked)}
-        />
-      </label>
-      <button type="submit">Submit {type}</button>
+      <label htmlFor="amount">Amount</label>
+      <input type="number" name="amount" id="amount" />
+      <label htmlFor="description">Description</label>
+      <input type="text" name="description" id="description" />
+      <label htmlFor="date">Date</label>
+      <input type="date" name="date" id="date" />
+      <label htmlFor="category">Category</label>
+      <input type="text" name="category" id="category" />
+      <label htmlFor="recurring">Recurring</label>
+      <input type="checkbox" name="recurring" id="recurring" />
+      <button type="submit">Submit</button>
     </form>
   );
 };
