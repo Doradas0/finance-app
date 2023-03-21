@@ -5,15 +5,19 @@ import { z } from "zod";
 type Sendtransaction = RouterInput['createTransaction'];
 
 export default function Home() {
+  const utils = trpc.useContext();
+  const transactions = trpc.listTransactions.useQuery();
+
   const createTransaction = trpc.createTransaction.useMutation();
   const deleteTransaction = trpc.deleteTransaction.useMutation();
 
-
   const handleFormSubmit = (transaction: Sendtransaction) => {
-    createTransaction.mutate(transaction);
+    createTransaction.mutate(transaction, {
+      onSuccess: () => {
+        utils.listTransactions.invalidate();
+      },
+    });
   };
-
-  const transactions = trpc.listTransactions.useQuery();
 
   if(transactions.isLoading) {
     return <div>Loading...</div>
