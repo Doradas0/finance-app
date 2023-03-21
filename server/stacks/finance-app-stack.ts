@@ -1,6 +1,6 @@
 import { App, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { LambdaRestApi, CfnStage } from "aws-cdk-lib/aws-apigateway";
 import { Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import path = require("path");
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
@@ -24,6 +24,7 @@ export class FinanceAppStack extends Stack {
       tracing: Tracing.ACTIVE,
       environment: {
         TABLE_NAME: DB.tableName,
+        POWERTOOLS_SERVICE_NAME: "FinanceApp",
       },
     });
 
@@ -43,5 +44,23 @@ export class FinanceAppStack extends Stack {
       allowMethods: ["GET", "POST", "OPTIONS"],
       allowHeaders: ["*"],
     });
+
+    const stage = endpoint.deploymentStage.node.defaultChild as CfnStage;
+    stage.tracingEnabled = true;
+    stage.accessLogSetting = {
+      destinationArn: `arn:aws:logs:${this.region}:${this.account}:log-group:/aws/apigateway/FinanceAppGateway`,
+      format: JSON.stringify({
+        requestId: "$context.requestId",
+        ip: "$context.identity.sourceIp",
+        caller: "$context.identity.caller",
+        user: "$context.identity.user",
+        requestTime: "$context.requestTime",
+        httpMethod: "$context.httpMethod",
+        resourcePath: "$context.resourcePath",
+        status: "$context.status",
+        protocol: "$context.protocol",
+        responseLength: "$context.responseLength",
+      }),
+    };
   }
 }

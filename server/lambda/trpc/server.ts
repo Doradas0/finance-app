@@ -3,8 +3,8 @@ import {
   CreateAWSLambdaContextOptions,
   awsLambdaRequestHandler,
 } from "@trpc/server/adapters/aws-lambda";
-
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { Tracer } from "@aws-lambda-powertools/tracer";
+import { APIGatewayProxyEvent, Context as LambdaContext } from "aws-lambda";
 import { z } from "zod";
 import { uuid } from "uuidv4";
 
@@ -149,12 +149,33 @@ const createContext =
 
 export type Context = inferAsyncReturnType<typeof createContext>;
 
-export const main = async (event: APIGatewayProxyEvent, context: any) => {
+const tracer = new Tracer();
+tracer.captureAWSv3Client(client);
+
+export const main = async (
+  event: APIGatewayProxyEvent,
+  context: LambdaContext
+) => {
+  // Get facade segment created by Lambda
+  const segment = tracer.getSegment();
+  // Create subsegment for the function and set it as active
+  const handlerSegment = segment.addNewSubsegment(`## ${process.env._HANDLER}`);
+  tracer.setSegment(handlerSegment);
+  tracer.annotateColdStart();
+  tracer.addServiceNameAnnotation();
+
+  tracer.putAnnotation("awsRequestId", context.awsRequestId);
+  tracer.putAnnotation("path", event.path);
+
   const handler = awsLambdaRequestHandler({
     router: appRouter,
     createContext,
   });
   const result = await handler(event, context);
+
+  handlerSegment.close();
+  tracer.setSegment(segment);
+
   result.headers = {
     ...result.headers,
     "Access-Control-Allow-Origin": "*",
@@ -162,5 +183,6 @@ export const main = async (event: APIGatewayProxyEvent, context: any) => {
     "Access-Control-Allow-Headers": "*",
     "Access-Control-Allow-Methods": "*",
   };
+
   return result;
 };
