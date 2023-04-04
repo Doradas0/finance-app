@@ -2,7 +2,7 @@
   "name": "finance-app",
   "version": "1.0.0",
   "scripts": {
-    "dev": "cd client && vite",
+    "client": "cd client && npm run dev",
     "build": "cd client && tsc && vite build",
     "preview": "cd client && vite preview",
     "deploy": "cd ./server && cdk deploy --profile main",
