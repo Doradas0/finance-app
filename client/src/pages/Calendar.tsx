@@ -22,7 +22,7 @@ export default function Calendar() {
       <h1>Calendar</h1>
       <div>
         <button onClick={goToPreviousMonth}>Previous</button>
-        <span>{selectedDate.toLocaleString("default", { month: "long" })}</span>
+        <span>{selectedDate.toLocaleString("default", { month: "long", year: "numeric" })}</span>
         <button onClick={goToNextMonth}>Next</button>
       </div>
       <table>
