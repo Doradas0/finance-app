@@ -115,7 +115,7 @@ const FinanceForm = (props: FinanceFormProps) => {
   return (
     <form onSubmit={handleSubmit}>
       <label htmlFor="amount">Amount</label>
-      <input type="number" name="amount" id="amount" />
+      <input type="number" name="amount" id="amount" step="0.01" />
       <label htmlFor="description">Description</label>
       <input type="text" name="description" id="description" />
       <label htmlFor="date">Date</label>
