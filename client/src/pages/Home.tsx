@@ -145,6 +145,7 @@ const DataTable = (props: {
           <th>Amount</th>
           <th>Date</th>
           <th>Category</th>
+          <th>Account</th>
         </tr>
       </thead>
       <tbody>
@@ -154,6 +155,7 @@ const DataTable = (props: {
             <td>{transaction?.amount}</td>
             <td>{transaction?.date}</td>
             <td>{transaction?.category}</td>
+            <td>{transaction?.account}</td>
             <td>
               <button onClick={() => handleDelete(transaction?.id)}>
                 Delete
