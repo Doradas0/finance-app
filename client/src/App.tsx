@@ -23,8 +23,8 @@ function App() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        {/* <Home /> */}
-        <Calendar />
+        <Home />
+        {/* <Calendar /> */}
       </QueryClientProvider>
     </trpc.Provider>
   );
