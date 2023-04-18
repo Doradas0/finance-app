@@ -1,8 +1,8 @@
-import React from 'react';
-import { trpc, RouterInput} from "../utils/trpc";
+import React from "react";
+import { trpc, RouterInput } from "../utils/trpc";
 import { z } from "zod";
 
-type Sendtransaction = RouterInput['createTransaction'];
+type Sendtransaction = RouterInput["createTransaction"];
 
 export default function Home() {
   const utils = trpc.useContext();
@@ -19,22 +19,32 @@ export default function Home() {
     });
   };
 
-  if(transactions.isLoading) {
-    return <div>Loading...</div>
+  if (transactions.isLoading) {
+    return <div>Loading...</div>;
   }
 
-  if(!transactions.data) {
-    return <div>No transactions</div>
+  if (!transactions.data) {
+    return <div>No transactions</div>;
   }
 
   type Transaction = typeof transactions.data[0];
   type TransactionKeys = keyof Transaction;
 
-  const expenses = transactions.data.filter((transaction) => transaction.type === "expense");
-  const income = transactions.data.filter((transaction) => transaction.type === "income");
+  const expenses = transactions.data.filter(
+    (transaction) => transaction.type === "expense"
+  );
+  const income = transactions.data.filter(
+    (transaction) => transaction.type === "income"
+  );
 
-  const totalExpenses = expenses.reduce((acc, transaction) => acc + Number(transaction.amount), 0);
-  const totalIncome = income.reduce((acc, transaction) => acc + Number(transaction.amount), 0);
+  const totalExpenses = expenses.reduce(
+    (acc, transaction) => acc + Number(transaction.amount),
+    0
+  );
+  const totalIncome = income.reduce(
+    (acc, transaction) => acc + Number(transaction.amount),
+    0
+  );
 
   const balance = totalIncome - totalExpenses;
 
@@ -70,6 +80,8 @@ export default function Home() {
         transactionData={sortData(income, "date")}
         handleDelete={handleDelete}
       />
+      <h1>Transfers</h1>
+      <FinanceForm type="transfer" submitForm={handleFormSubmit} />
       <h1>Net</h1>
       <p>Total this month: {balance} </p>
     </div>
@@ -77,9 +89,9 @@ export default function Home() {
 }
 
 type FinanceFormProps = {
-  type: "income" | "expense";
+  type: "income" | "expense" | "transfer";
   submitForm: (date: Sendtransaction) => void;
-}
+};
 
 const FinanceForm = (props: FinanceFormProps) => {
   const { type, submitForm } = props;
@@ -87,6 +99,10 @@ const FinanceForm = (props: FinanceFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    if (type === "transfer") {
+      handleTransfer(formData, submitForm);
+      return;
+    }
     const schema = z.object({
       amount: z.string().min(1),
       date: z.string().min(1),
@@ -102,13 +118,51 @@ const FinanceForm = (props: FinanceFormProps) => {
       category: formData.get("category"),
       type: type,
       account: formData.get("account"),
-    })
-    if(data.success) {
+    });
+    if (data.success) {
       submitForm(data.data);
     }
     if (!data.success) {
       alert("Please fill out all fields");
       console.log(data.error);
+    }
+  };
+
+  const handleTransfer = (
+    formData: FormData,
+    submitForm: (date: Sendtransaction) => void
+  ) => {
+    // create two transactions, one for each account
+    const schema = z.object({
+      amount: z.string().min(1),
+      date: z.string().min(1),
+      description: z.string().min(1),
+      category: z.string().min(1),
+      type: z.string().min(1),
+      account: z.string().min(1),
+    });
+    const data = schema.safeParse({
+      amount: formData.get("amount"),
+      date: formData.get("date"),
+      description: formData.get("description"),
+      category: "transfer",
+      type: "expense",
+      account: formData.get("fromAccount"),
+    });
+    const data2 = schema.safeParse({
+      amount: formData.get("amount"),
+      date: formData.get("date"),
+      description: formData.get("description"),
+      category: "transfer",
+      type: "income",
+      account: formData.get("toAccount"),
+    });
+    if (data.success && data2.success) {
+      submitForm(data.data);
+      submitForm(data2.data);
+    }
+    if (!data.success || !data2.success) {
+      alert("Please fill out all fields");
     }
   };
 
@@ -120,10 +174,21 @@ const FinanceForm = (props: FinanceFormProps) => {
       <input type="text" name="description" id="description" />
       <label htmlFor="date">Date</label>
       <input type="date" name="date" id="date" />
-      <label htmlFor="category">Category</label>
-      <input type="text" name="category" id="category" />
-      <label htmlFor="account">Account</label>
-      <input type="text" name="account" id="account" />
+      {type === "transfer" ? (
+        <>
+          <label htmlFor="fromAccount">From Account</label>
+          <input type="text" name="fromAccount" id="fromAccount" />
+          <label htmlFor="toAccount">To Account</label>
+          <input type="text" name="toAccount" id="toAccount" />
+        </>
+      ) : (
+        <>
+          <label htmlFor="category">Category</label>
+          <input type="text" name="category" id="category" />
+          <label htmlFor="account">Account</label>
+          <input type="text" name="account" id="account" />
+        </>
+      )}
       <button type="submit">Submit</button>
     </form>
   );
