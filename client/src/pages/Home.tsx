@@ -49,7 +49,11 @@ export default function Home() {
   const balance = totalIncome - totalExpenses;
 
   const handleDelete = (id: string) => {
-    deleteTransaction.mutate(id);
+    deleteTransaction.mutate(id, {
+      onSuccess: () => {
+        utils.listTransactions.invalidate();
+      },
+    });
   };
 
   const sortData = (data: Transaction[], field: TransactionKeys) => {
