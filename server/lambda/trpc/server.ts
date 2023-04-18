@@ -35,34 +35,51 @@ const client = DynamoDBDocumentClient.from(database, {
   unmarshallOptions,
 });
 
+const ZTransactionInput = z.object({
+  amount: z.string(),
+  description: z.string(),
+  date: z.string(),
+  account: z.string(),
+  category: z.string(),
+  type: z.string(),
+});
+
+const ZTransaction = ZTransactionInput.extend({
+  id: z.string(),
+});
+
+const ZDB_TransactionItem = ZTransaction.extend({
+  PK: z.string(),
+  SK: z.string(),
+});
+
+const ZDB_TransactionParams = z.object({
+  TableName: z.string(),
+  Item: ZDB_TransactionItem,
+});
+
+type DB_TransactionParams = z.infer<typeof ZDB_TransactionParams>;
+type Transaction = z.infer<typeof ZTransaction>;
+
 export const t = initTRPC.create();
 
 const transactionRouter = t.router({
   createTransaction: t.procedure
-    .input(
-      z.object({
-        amount: z.string(),
-        description: z.string(),
-        date: z.string(),
-        category: z.string(),
-        type: z.string(),
-        recurring: z.string(),
-      })
-    )
+    .input(ZTransactionInput)
     .mutation(async ({ input }) => {
       const id = uuid();
-      const params = {
-        TableName: process.env.TABLE_NAME,
+      const params: DB_TransactionParams = {
+        TableName: process.env.TABLE_NAME as string,
         Item: {
           PK: "User#1234",
           SK: `Transaction#${id}`,
           id: id,
-          amount: input.amount,
           description: input.description,
-          date: input.date,
           category: input.category,
           type: input.type,
-          recurring: input.recurring,
+          account: input.account,
+          amount: input.amount,
+          date: input.date,
         },
       };
       try {
@@ -75,21 +92,7 @@ const transactionRouter = t.router({
 
   listTransactions: t.procedure
     .input(z.undefined())
-    .output(
-      z
-        .array(
-          z.object({
-            id: z.string(),
-            amount: z.string(),
-            description: z.string(),
-            date: z.string(),
-            category: z.string(),
-            type: z.string(),
-            recurring: z.string(),
-          })
-        )
-        .nullish()
-    )
+    .output(z.array(ZTransaction).nullish())
     .query(async () => {
       const params = {
         TableName: process.env.TABLE_NAME,
@@ -100,7 +103,8 @@ const transactionRouter = t.router({
       };
       try {
         const data = await client.send(new QueryCommand(params));
-        const items = data.Items?.map((item) => {
+        tracer.putMetadata("dynamodb response", data);
+        const items = data.Items?.map((item): Transaction => {
           return {
             id: item.id,
             amount: item.amount,
@@ -108,7 +112,7 @@ const transactionRouter = t.router({
             date: item.date,
             category: item.category,
             type: item.type,
-            recurring: item.recurring,
+            account: item.account,
           };
         });
         return items;

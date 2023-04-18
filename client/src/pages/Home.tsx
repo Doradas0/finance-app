@@ -92,16 +92,16 @@ const FinanceForm = (props: FinanceFormProps) => {
       date: z.string().min(1),
       description: z.string().min(1),
       category: z.string().min(1),
-      recurring: z.string().min(1),
       type: z.string().min(1),
+      account: z.string().min(1),
     });
     const data = schema.safeParse({
       amount: formData.get("amount"),
       date: formData.get("date"),
       description: formData.get("description"),
       category: formData.get("category"),
-      recurring: formData.get("recurring"),
       type: type,
+      account: formData.get("account"),
     })
     if(data.success) {
       submitForm(data.data);
@@ -122,8 +122,8 @@ const FinanceForm = (props: FinanceFormProps) => {
       <input type="date" name="date" id="date" />
       <label htmlFor="category">Category</label>
       <input type="text" name="category" id="category" />
-      <label htmlFor="recurring">Recurring</label>
-      <input type="checkbox" name="recurring" id="recurring" />
+      <label htmlFor="account">Account</label>
+      <input type="text" name="account" id="account" />
       <button type="submit">Submit</button>
     </form>
   );
