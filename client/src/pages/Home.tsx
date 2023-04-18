@@ -41,6 +41,27 @@ export default function Home() {
     (acc, transaction) => acc + Number(transaction.amount),
     0
   );
+
+  const uniqueAccounts = [
+    ...new Set(transactions.data.map((transaction) => transaction.account)),
+  ];
+
+  const totalForAccount = (account: string) => {
+    const transactionsForAccount = transactions?.data?.filter(
+      (transaction) => transaction.account === account
+    );
+    const total = transactionsForAccount?.reduce(
+      (acc, transaction) =>
+        transaction.type === "expense"
+          ? acc - Number(transaction.amount) : acc + Number(transaction.amount),
+      0
+    );
+    if (!total) {
+      return 0;
+    }
+    return total.toFixed(2);
+  };
+
   const totalIncome = income.reduce(
     (acc, transaction) => acc + Number(transaction.amount),
     0
@@ -70,6 +91,14 @@ export default function Home() {
 
   return (
     <div>
+      <h1>Accounts</h1>
+      <ul>
+        {uniqueAccounts.map((account) => (
+          <li key={account}>
+            {account}: {totalForAccount(account)}
+          </li>
+        ))}
+      </ul>
       <h1>Expenses</h1>
       <p>Total this month: {totalExpenses} </p>
       <FinanceForm type="expense" submitForm={handleFormSubmit} />
@@ -86,8 +115,6 @@ export default function Home() {
       />
       <h1>Transfers</h1>
       <FinanceForm type="transfer" submitForm={handleFormSubmit} />
-      <h1>Net</h1>
-      <p>Total this month: {balance} </p>
     </div>
   );
 }
