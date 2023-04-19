@@ -18,7 +18,6 @@ import {
   PutCommand,
   QueryCommand,
   DeleteCommand,
-  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const database = new DynamoDBClient({ region: "eu-west-1" });
@@ -146,6 +145,30 @@ const transactionRouter = t.router({
         throw new Error("Error deleting transaction");
       }
     }),
+
+  updateTransaction: t.procedure
+    .input(ZTransaction)
+    .mutation(async ({ input }) => {
+      const params: DB_TransactionParams = {
+        TableName: process.env.TABLE_NAME as string,
+        Item: {
+          PK: "User#1234",
+          SK: `Transaction#${input.id}`,
+          id: input.id,
+          description: input.description,
+          category: input.category,
+          type: input.type,
+          account: input.account,
+          amount: input.amount,
+          date: input.date,
+        },
+      };
+      try {
+        await client.send(new PutCommand(params));
+        return input;
+      } catch (err) {
+        console.error(err);
+        throw new Error("Error updating transaction");
       }
     }),
 });

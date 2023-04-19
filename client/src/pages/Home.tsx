@@ -1,6 +1,7 @@
 import React from "react";
 import { trpc, RouterInput } from "../utils/trpc";
 import { z } from "zod";
+import { useState } from "react";
 
 type Sendtransaction = RouterInput["createTransaction"];
 
@@ -10,6 +11,7 @@ export default function Home() {
 
   const createTransaction = trpc.createTransaction.useMutation();
   const deleteTransaction = trpc.deleteTransaction.useMutation();
+  const updateTransaction = trpc.updateTransaction.useMutation();
 
   const handleFormSubmit = (transaction: Sendtransaction) => {
     createTransaction.mutate(transaction, {
@@ -18,6 +20,24 @@ export default function Home() {
       },
     });
   };
+
+  const handleDelete = (id: string) => {
+    deleteTransaction.mutate(id, {
+      onSuccess: () => {
+        utils.listTransactions.invalidate();
+      },
+    });
+  };
+
+  const handleUpdate = (transaction: Transaction) => {
+    updateTransaction.mutate(transaction, {
+      onSuccess: () => {
+        console.log("updated");
+        utils.listTransactions.invalidate();
+      },
+    });
+  };
+
 
   if (transactions.isLoading) {
     return <div>Loading...</div>;
@@ -37,17 +57,13 @@ export default function Home() {
     (transaction) => transaction.type === "income"
   );
 
-  const totalExpenses = expenses.reduce(
-    (acc, transaction) => acc + Number(transaction.amount),
-    0
-  ).toFixed(2);
+  const totalExpenses = expenses
+    .reduce((acc, transaction) => acc + Number(transaction.amount), 0)
+    .toFixed(2);
 
-  const totalIncome = income.reduce(
-    (acc, transaction) => acc + Number(transaction.amount),
-    0
-  ).toFixed(2);
-
-
+  const totalIncome = income
+    .reduce((acc, transaction) => acc + Number(transaction.amount), 0)
+    .toFixed(2);
 
   const uniqueAccounts = [
     ...new Set(transactions.data.map((transaction) => transaction.account)),
@@ -60,21 +76,14 @@ export default function Home() {
     const total = transactionsForAccount?.reduce(
       (acc, transaction) =>
         transaction.type === "expense"
-          ? acc - Number(transaction.amount) : acc + Number(transaction.amount),
+          ? acc - Number(transaction.amount)
+          : acc + Number(transaction.amount),
       0
     );
     if (!total) {
       return 0;
     }
     return total.toFixed(2);
-  };
-
-  const handleDelete = (id: string) => {
-    deleteTransaction.mutate(id, {
-      onSuccess: () => {
-        utils.listTransactions.invalidate();
-      },
-    });
   };
 
   const sortData = (data: Transaction[], field: TransactionKeys) => {
@@ -105,6 +114,7 @@ export default function Home() {
       <DataTable
         transactionData={sortData(expenses, "date")}
         handleDelete={handleDelete}
+        handleUpdate={handleUpdate}
       />
       <h1>Income</h1>
       <p>Total this month: {totalIncome} </p>
@@ -112,6 +122,7 @@ export default function Home() {
       <DataTable
         transactionData={sortData(income, "date")}
         handleDelete={handleDelete}
+        handleUpdate={handleUpdate}
       />
       <h1>Transfers</h1>
       <FinanceForm type="transfer" submitForm={handleFormSubmit} />
@@ -228,8 +239,9 @@ const FinanceForm = (props: FinanceFormProps) => {
 const DataTable = (props: {
   transactionData: any[];
   handleDelete: (id: string) => void;
+  handleUpdate: (transaction: any) => void;
 }) => {
-  const { transactionData, handleDelete } = props;
+  const { transactionData, handleDelete, handleUpdate } = props;
   if (!transactionData) {
     return null;
   }
@@ -245,20 +257,103 @@ const DataTable = (props: {
         </tr>
       </thead>
       <tbody>
-        {transactionData.map((transaction) => (
-          <tr key={transaction?.id}>
-            <td>{transaction?.description}</td>
-            <td>{transaction?.amount}</td>
-            <td>{transaction?.date}</td>
-            <td>{transaction?.category}</td>
-            <td>{transaction?.account}</td>
-            <td>
-              <button onClick={() => handleDelete(transaction?.id)}>
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
+        {transactionData.map((transaction) => {
+          const [currentTransaction, setTransaction] = useState(
+            transaction
+          );
+          const handleDescriptionChange = (
+            e: React.ChangeEvent<HTMLInputElement>
+          ) => {
+            setTransaction({
+              ...currentTransaction,
+              description: e.target.value,
+            });
+          };
+          const handleAmountChange = (
+            e: React.ChangeEvent<HTMLInputElement>
+          ) => {
+            setTransaction({
+              ...currentTransaction,
+              amount: e.target.value,
+            });
+          };
+          const handleDateChange = (
+            e: React.ChangeEvent<HTMLInputElement>
+          ) => {
+            setTransaction({
+              ...currentTransaction,
+              date: e.target.value,
+            });
+          };
+          const handleCategoryChange = (
+            e: React.ChangeEvent<HTMLInputElement>
+          ) => {
+            setTransaction({
+              ...currentTransaction,
+              category: e.target.value,
+            });
+          };
+          const handleAccountChange = (
+            e: React.ChangeEvent<HTMLInputElement>
+          ) => {
+            setTransaction({
+              ...currentTransaction,
+              account: e.target.value,
+            });
+          };
+          const handleUpdateClick = () => {
+            handleUpdate(currentTransaction);
+          };
+          return (
+            <tr key={transaction.id}>
+              <td>
+                <input
+                  type="text"
+                  value={currentTransaction.description}
+                  onChange={handleDescriptionChange}
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  value={currentTransaction.amount}
+                  onChange={handleAmountChange}
+                />
+              </td>
+              <td>
+                <input
+                  type="date"
+                  value={currentTransaction.date}
+                  onChange={handleDateChange}
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={currentTransaction.category}
+                  onChange={handleCategoryChange}
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={currentTransaction.account}
+                  onChange={handleAccountChange}
+                />
+              </td>
+              <td>
+                <button onClick={handleUpdateClick}>Update</button>
+              </td>
+              <td>
+                <button
+                  onClick={() => handleDelete(transaction._id)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
