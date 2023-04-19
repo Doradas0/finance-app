@@ -4,7 +4,11 @@ import {
   awsLambdaRequestHandler,
 } from "@trpc/server/adapters/aws-lambda";
 import { Tracer } from "@aws-lambda-powertools/tracer";
-import { APIGatewayProxyEvent, Context as LambdaContext } from "aws-lambda";
+import {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context as LambdaContext,
+} from "aws-lambda";
 import { z } from "zod";
 import { uuid } from "uuidv4";
 
@@ -14,6 +18,7 @@ import {
   PutCommand,
   QueryCommand,
   DeleteCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const database = new DynamoDBClient({ region: "eu-west-1" });
@@ -86,7 +91,8 @@ const transactionRouter = t.router({
         await client.send(new PutCommand(params));
         return id;
       } catch (err) {
-        return null;
+        console.error(err);
+        throw new Error("Error creating transaction");
       }
     }),
 
@@ -117,7 +123,8 @@ const transactionRouter = t.router({
         });
         return items;
       } catch (err) {
-        return null;
+        console.error(err);
+        throw new Error("Error fetching transactions");
       }
     }),
 
@@ -135,7 +142,10 @@ const transactionRouter = t.router({
         await client.send(new DeleteCommand(params));
         return input;
       } catch (err) {
-        return null;
+        console.error(err);
+        throw new Error("Error deleting transaction");
+      }
+    }),
       }
     }),
 });
@@ -175,18 +185,23 @@ export const main = async (
     router: appRouter,
     createContext,
   });
-  const result = await handler(event, context);
 
-  handlerSegment.close();
-  tracer.setSegment(segment);
+  let result: APIGatewayProxyResult;
+  try {
+    result = await handler(event, context);
+    result.headers = {
+      ...result.headers,
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Methods": "*",
+    };
 
-  result.headers = {
-    ...result.headers,
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": true,
-    "Access-Control-Allow-Headers": "*",
-    "Access-Control-Allow-Methods": "*",
-  };
-
-  return result;
+    return result;
+  } catch (err) {
+    throw err;
+  } finally {
+    handlerSegment.close();
+    tracer.setSegment(segment);
+  }
 };
