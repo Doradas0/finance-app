@@ -40,7 +40,14 @@ export default function Home() {
   const totalExpenses = expenses.reduce(
     (acc, transaction) => acc + Number(transaction.amount),
     0
-  );
+  ).toFixed(2);
+
+  const totalIncome = income.reduce(
+    (acc, transaction) => acc + Number(transaction.amount),
+    0
+  ).toFixed(2);
+
+
 
   const uniqueAccounts = [
     ...new Set(transactions.data.map((transaction) => transaction.account)),
@@ -61,13 +68,6 @@ export default function Home() {
     }
     return total.toFixed(2);
   };
-
-  const totalIncome = income.reduce(
-    (acc, transaction) => acc + Number(transaction.amount),
-    0
-  );
-
-  const balance = totalIncome - totalExpenses;
 
   const handleDelete = (id: string) => {
     deleteTransaction.mutate(id, {
