@@ -6,6 +6,7 @@ import { useState } from "react";
 type Sendtransaction = RouterInput["createTransaction"];
 
 export default function Home() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const utils = trpc.useContext();
   const transactions = trpc.listTransactions.useQuery();
 
@@ -38,7 +39,6 @@ export default function Home() {
     });
   };
 
-
   if (transactions.isLoading) {
     return <div>Loading...</div>;
   }
@@ -57,6 +57,10 @@ export default function Home() {
     (transaction) => transaction.type === "income"
   );
 
+  const transactionsUntilDate = transactions.data.filter(
+    (transaction) => new Date(transaction.date) <= selectedDate
+  );
+
   const totalExpenses = expenses
     .reduce((acc, transaction) => acc + Number(transaction.amount), 0)
     .toFixed(2);
@@ -70,7 +74,7 @@ export default function Home() {
   ];
 
   const totalForAccount = (account: string) => {
-    const transactionsForAccount = transactions?.data?.filter(
+    const transactionsForAccount = transactionsUntilDate?.filter(
       (transaction) => transaction.account === account
     );
     const total = transactionsForAccount?.reduce(
@@ -101,6 +105,12 @@ export default function Home() {
   return (
     <div>
       <h1>Accounts</h1>
+      <h3>Until Date</h3>
+      <input
+        type="date"
+        value={selectedDate.toISOString().split("T")[0]}
+        onChange={(e) => setSelectedDate(new Date(e.target.value))}
+      />
       <ul>
         {uniqueAccounts.map((account) => (
           <li key={account}>
@@ -258,9 +268,7 @@ const DataTable = (props: {
       </thead>
       <tbody>
         {transactionData.map((transaction) => {
-          const [currentTransaction, setTransaction] = useState(
-            transaction
-          );
+          const [currentTransaction, setTransaction] = useState(transaction);
           const handleDescriptionChange = (
             e: React.ChangeEvent<HTMLInputElement>
           ) => {
@@ -277,9 +285,7 @@ const DataTable = (props: {
               amount: e.target.value,
             });
           };
-          const handleDateChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) => {
+          const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             setTransaction({
               ...currentTransaction,
               date: e.target.value,
@@ -345,9 +351,7 @@ const DataTable = (props: {
                 <button onClick={handleUpdateClick}>Update</button>
               </td>
               <td>
-                <button
-                  onClick={() => handleDelete(transaction._id)}
-                >
+                <button onClick={() => handleDelete(transaction._id)}>
                   Delete
                 </button>
               </td>
