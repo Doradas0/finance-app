@@ -288,9 +288,9 @@ const DataTable = (props: {
           ) => {
             setTransaction({
               ...currentTransaction,
-              [e.target.name]:  e.target.checked
-            })
-          }
+              [e.target.name]: e.target.checked,
+            });
+          };
           const handleUpdateClick = () => {
             const schema = z.object({
               id: z.string().min(1),
