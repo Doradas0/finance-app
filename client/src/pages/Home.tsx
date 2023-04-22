@@ -162,6 +162,7 @@ const FinanceForm = (props: FinanceFormProps) => {
       category: z.string().min(1),
       type: z.string().min(1),
       account: z.string().min(1),
+      paid: z.coerce.boolean(),
     });
     const data = schema.safeParse({
       amount: formData.get("amount"),
@@ -170,6 +171,7 @@ const FinanceForm = (props: FinanceFormProps) => {
       category: formData.get("category"),
       type: type,
       account: formData.get("account"),
+      paid: formData.get("paid"),
     });
     if (data.success) {
       submitForm(data.data);
@@ -192,6 +194,7 @@ const FinanceForm = (props: FinanceFormProps) => {
       category: z.string().min(1),
       type: z.string().min(1),
       account: z.string().min(1),
+      paid: z.coerce.boolean(),
     });
     const data = schema.safeParse({
       amount: formData.get("amount"),
@@ -200,6 +203,7 @@ const FinanceForm = (props: FinanceFormProps) => {
       category: "transfer",
       type: "expense",
       account: formData.get("fromAccount"),
+      paid: formData.get("paid"),
     });
     const data2 = schema.safeParse({
       amount: formData.get("amount"),
@@ -208,6 +212,7 @@ const FinanceForm = (props: FinanceFormProps) => {
       category: "transfer",
       type: "income",
       account: formData.get("toAccount"),
+      paid: formData.get("paid"),
     });
     if (data.success && data2.success) {
       submitForm(data.data);
@@ -264,50 +269,47 @@ const DataTable = (props: {
           <th>Date</th>
           <th>Category</th>
           <th>Account</th>
+          <th>Paid</th>
         </tr>
       </thead>
       <tbody>
         {transactionData.map((transaction) => {
           const [currentTransaction, setTransaction] = useState(transaction);
-          const handleDescriptionChange = (
+          const handleValueChange = (
             e: React.ChangeEvent<HTMLInputElement>
           ) => {
             setTransaction({
               ...currentTransaction,
-              description: e.target.value,
+              [e.target.name]: e.target.value,
             });
           };
-          const handleAmountChange = (
+          const handleCheckboxChange = (
             e: React.ChangeEvent<HTMLInputElement>
           ) => {
             setTransaction({
               ...currentTransaction,
-              amount: e.target.value,
-            });
-          };
-          const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            setTransaction({
-              ...currentTransaction,
-              date: e.target.value,
-            });
-          };
-          const handleCategoryChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) => {
-            setTransaction({
-              ...currentTransaction,
-              category: e.target.value,
-            });
-          };
-          const handleAccountChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) => {
-            setTransaction({
-              ...currentTransaction,
-              account: e.target.value,
-            });
-          };
+              [e.target.name]:  e.target.checked
+            })
+          }
           const handleUpdateClick = () => {
+            const schema = z.object({
+              id: z.string().min(1),
+              amount: z.string().min(1),
+              date: z.string().min(1),
+              description: z.string().min(1),
+              category: z.string().min(1),
+              type: z.string().min(1),
+              account: z.string().min(1),
+              paid: z.coerce.boolean(),
+            });
+            const data = schema.safeParse(currentTransaction);
+            if (data.success) {
+              handleUpdate(data.data);
+            }
+            if (!data.success) {
+              alert("Please fill out all fields");
+              console.log(data.error);
+            }
             handleUpdate(currentTransaction);
           };
           return (
@@ -315,36 +317,49 @@ const DataTable = (props: {
               <td>
                 <input
                   type="text"
+                  name="description"
                   value={currentTransaction.description}
-                  onChange={handleDescriptionChange}
+                  onChange={handleValueChange}
                 />
               </td>
               <td>
                 <input
                   type="number"
+                  name="amount"
                   value={currentTransaction.amount}
-                  onChange={handleAmountChange}
+                  onChange={handleValueChange}
                 />
               </td>
               <td>
                 <input
                   type="date"
+                  name="date"
                   value={currentTransaction.date}
-                  onChange={handleDateChange}
+                  onChange={handleValueChange}
                 />
               </td>
               <td>
                 <input
                   type="text"
+                  name="category"
                   value={currentTransaction.category}
-                  onChange={handleCategoryChange}
+                  onChange={handleValueChange}
                 />
               </td>
               <td>
                 <input
                   type="text"
+                  name="account"
                   value={currentTransaction.account}
-                  onChange={handleAccountChange}
+                  onChange={handleValueChange}
+                />
+              </td>
+              <td>
+                <input
+                  type="checkbox"
+                  name="paid"
+                  checked={currentTransaction.paid}
+                  onChange={handleCheckboxChange}
                 />
               </td>
               <td>

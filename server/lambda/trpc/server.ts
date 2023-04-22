@@ -46,6 +46,7 @@ const ZTransactionInput = z.object({
   account: z.string(),
   category: z.string(),
   type: z.string(),
+  paid: z.boolean(),
 });
 
 const ZTransaction = ZTransactionInput.extend({
@@ -84,6 +85,7 @@ const transactionRouter = t.router({
           account: input.account,
           amount: input.amount,
           date: input.date,
+          paid: input.paid,
         },
       };
       try {
@@ -118,6 +120,7 @@ const transactionRouter = t.router({
             category: item.category,
             type: item.type,
             account: item.account,
+            paid: item.paid ? item.paid : false,
           };
         });
         return items;
@@ -161,6 +164,7 @@ const transactionRouter = t.router({
           account: input.account,
           amount: input.amount,
           date: input.date,
+          paid: input.paid,
         },
       };
       try {
