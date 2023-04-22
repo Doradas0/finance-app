@@ -380,7 +380,7 @@ const TransactionItem = (props: {
         <button onClick={handleUpdateClick}>Update</button>
       </td>
       <td>
-        <button onClick={() => handleDelete(transaction._id)}>Delete</button>
+        <button onClick={() => handleDelete(transaction.id)}>Delete</button>
       </td>
     </tr>
   );
