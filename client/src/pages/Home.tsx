@@ -142,7 +142,7 @@ export default function Home() {
 
 type FinanceFormProps = {
   type: "income" | "expense" | "transfer";
-  submitForm: (date: Sendtransaction) => void;
+  submitForm: (data: Sendtransaction) => void;
 };
 
 const FinanceForm = (props: FinanceFormProps) => {
@@ -273,107 +273,115 @@ const DataTable = (props: {
         </tr>
       </thead>
       <tbody>
-        {transactionData.map((transaction) => {
-          const [currentTransaction, setTransaction] = useState(transaction);
-          const handleValueChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) => {
-            setTransaction({
-              ...currentTransaction,
-              [e.target.name]: e.target.value,
-            });
-          };
-          const handleCheckboxChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) => {
-            setTransaction({
-              ...currentTransaction,
-              [e.target.name]: e.target.checked,
-            });
-          };
-          const handleUpdateClick = () => {
-            const schema = z.object({
-              id: z.string().min(1),
-              amount: z.string().min(1),
-              date: z.string().min(1),
-              description: z.string().min(1),
-              category: z.string().min(1),
-              type: z.string().min(1),
-              account: z.string().min(1),
-              paid: z.coerce.boolean(),
-            });
-            const data = schema.safeParse(currentTransaction);
-            if (data.success) {
-              handleUpdate(data.data);
-            }
-            if (!data.success) {
-              alert("Please fill out all fields");
-              console.log(data.error);
-            }
-            handleUpdate(currentTransaction);
-          };
-          return (
-            <tr key={transaction.id}>
-              <td>
-                <input
-                  type="text"
-                  name="description"
-                  value={currentTransaction.description}
-                  onChange={handleValueChange}
-                />
-              </td>
-              <td>
-                <input
-                  type="number"
-                  name="amount"
-                  value={currentTransaction.amount}
-                  onChange={handleValueChange}
-                />
-              </td>
-              <td>
-                <input
-                  type="date"
-                  name="date"
-                  value={currentTransaction.date}
-                  onChange={handleValueChange}
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  name="category"
-                  value={currentTransaction.category}
-                  onChange={handleValueChange}
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  name="account"
-                  value={currentTransaction.account}
-                  onChange={handleValueChange}
-                />
-              </td>
-              <td>
-                <input
-                  type="checkbox"
-                  name="paid"
-                  checked={currentTransaction.paid}
-                  onChange={handleCheckboxChange}
-                />
-              </td>
-              <td>
-                <button onClick={handleUpdateClick}>Update</button>
-              </td>
-              <td>
-                <button onClick={() => handleDelete(transaction._id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          );
-        })}
+        {transactionData.map((transaction) => (
+          <TransactionItem
+            key={transaction.id}
+            transaction={transaction}
+            handleDelete={handleDelete}
+            handleUpdate={handleUpdate}
+          />
+        ))}
       </tbody>
     </table>
+  );
+};
+
+const TransactionItem = (props: {
+  transaction: any;
+  handleUpdate: any;
+  handleDelete: any;
+}) => {
+  const { transaction, handleUpdate, handleDelete } = props;
+  const [currentTransaction, setTransaction] = useState(transaction);
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTransaction({
+      ...currentTransaction,
+      [e.target.name]: e.target.value,
+    });
+  };
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTransaction({
+      ...currentTransaction,
+      [e.target.name]: e.target.checked,
+    });
+  };
+  const handleUpdateClick = () => {
+    const schema = z.object({
+      id: z.string().min(1),
+      amount: z.string().min(1),
+      date: z.string().min(1),
+      description: z.string().min(1),
+      category: z.string().min(1),
+      type: z.string().min(1),
+      account: z.string().min(1),
+      paid: z.coerce.boolean(),
+    });
+    const data = schema.safeParse(currentTransaction);
+    if (data.success) {
+      handleUpdate(data.data);
+    }
+    if (!data.success) {
+      alert("Please fill out all fields");
+      console.log(data.error);
+    }
+    handleUpdate(currentTransaction);
+  };
+  return (
+    <tr>
+      <td>
+        <input
+          type="text"
+          name="description"
+          value={currentTransaction.description}
+          onChange={handleValueChange}
+        />
+      </td>
+      <td>
+        <input
+          type="number"
+          name="amount"
+          value={currentTransaction.amount}
+          onChange={handleValueChange}
+        />
+      </td>
+      <td>
+        <input
+          type="date"
+          name="date"
+          value={currentTransaction.date}
+          onChange={handleValueChange}
+        />
+      </td>
+      <td>
+        <input
+          type="text"
+          name="category"
+          value={currentTransaction.category}
+          onChange={handleValueChange}
+        />
+      </td>
+      <td>
+        <input
+          type="text"
+          name="account"
+          value={currentTransaction.account}
+          onChange={handleValueChange}
+        />
+      </td>
+      <td>
+        <input
+          type="checkbox"
+          name="paid"
+          checked={currentTransaction.paid}
+          onChange={handleCheckboxChange}
+        />
+      </td>
+      <td>
+        <button onClick={handleUpdateClick}>Update</button>
+      </td>
+      <td>
+        <button onClick={() => handleDelete(transaction._id)}>Delete</button>
+      </td>
+    </tr>
   );
 };
